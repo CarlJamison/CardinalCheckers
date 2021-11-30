@@ -24,7 +24,6 @@ class CheckerBoard:
                     self.crowned[i][j] = boardString[coord: coord + 1] == "C"
                     coord+=1
             coord+=1
-            
 
     def checkDirection(self, iO, jO, i, j):
         if (self.board[i][j] == self.player and (self.crowned[i][j] or iO == -self.player)):
@@ -113,9 +112,9 @@ class CheckerBoard:
 
 			#Check if a jump
             if (abs(startX - endX) == 2 and abs(startY - endY) == 2):
-                if (self.board[(startX + endX) / 2][(startY + endY) / 2] == -self.player):
+                if (self.board[int((startX + endX) / 2)][int((startY + endY) / 2)] == -self.player):
                     if (self.crowned[startX][startY] or (startX - endX) == self.player * 2):
-                        self.board[(startX + endX) / 2][(startY + endY) / 2] = 0
+                        self.board[int((startX + endX) / 2)][int((startY + endY) / 2)] = 0
                         self.jumped = True
                         self.iJump = endX
                         self.jJump = endY
@@ -194,8 +193,22 @@ def getNaiveScore(board: CheckerBoard, player):
 
     return runningScore
 
+def getScoreRec(board: CheckerBoard, player, remainingRounds):
+    if(board.gameOver or remainingRounds == 0):
+        return getNaiveScore(board, player)
+
+    totalScore = 0
+    moveList = board.getMoveList()
+    for move in moveList:
+
+        clone = copy.deepcopy(board)
+        clone.makeMove(move)
+        totalScore += getScoreRec(clone, board.player, remainingRounds - 1)
+
+    return totalScore / len(moveList)
+
 def getScore(board, player):
-    return getNaiveScore(board, player)
+    return getScoreRec(board, player, 5)
 
 def getActionList(boardString):
     board = CheckerBoard(boardString)
