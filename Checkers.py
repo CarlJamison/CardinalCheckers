@@ -1,5 +1,3 @@
-import copy
-
 class Move:
     def __init__(self, startX, startY, endX, endY):
         self.startX = startX
@@ -15,6 +13,7 @@ class CheckerBoard:
         self.board = [[0]*8 for i in range(8)]
         self.crowned = [[0]*8 for i in range(8)]
         self.player = int(boardString[0: 1]) - 1
+        self.gameOver = False
         coord = 2
         for i in range(8):
             for j in range(8):
@@ -115,6 +114,7 @@ class CheckerBoard:
                 if (self.board[int((startX + endX) / 2)][int((startY + endY) / 2)] == -self.player):
                     if (self.crowned[startX][startY] or (startX - endX) == self.player * 2):
                         self.board[int((startX + endX) / 2)][int((startY + endY) / 2)] = 0
+                        self.crowned[int((startX + endX) / 2)][int((startY + endY) / 2)] = False
                         self.jumped = True
                         self.iJump = endX
                         self.jJump = endY
@@ -127,25 +127,25 @@ class CheckerBoard:
                     if (not self.isJumpPossible()):
                         valid = True
 
-                    if (valid):
-                        self.board[startX][startY] = 0
-                        self.board[endX][endY] = self.player
-                        self.crowned[endX][endY] = self.crowned[startX][startY]
-                        self.crowned[startX][startY] = False
+            if (valid):
+                self.board[startX][startY] = 0
+                self.board[endX][endY] = self.player
+                self.crowned[endX][endY] = self.crowned[startX][startY]
+                self.crowned[startX][startY] = False
 
-                        if ((endX == 8 - 1 and self.player == -1) or (endX == 0 and self.player == 1)):
-                            self.crowned[endX][endY] = True
+                if ((endX == 8 - 1 and self.player == -1) or (endX == 0 and self.player == 1)):
+                    self.crowned[endX][endY] = True
 
-                        if (not self.checkWin() and not (self.jumped and self.isJumpPossible())):
-                            self.player = -self.player
-                            self.jumped = False
+                if (not self.checkWin() and not (self.jumped and self.isJumpPossible())):
+                    self.player = -self.player
+                    self.jumped = False
 
-                            if (not self.isMovePossible()):
-                                self.player = -self.player
-                                if(not self.isMovePossible()):
-                                    self.gameOver = True
-                    else:
-                        print("Move failed")
+                    if (not self.isMovePossible()):
+                        self.player = -self.player
+                        if(not self.isMovePossible()):
+                            self.gameOver = True
+            else:
+                print("Move failed")
 
     def toString(self):
         returnString = str(self.player + 1)
@@ -161,86 +161,3 @@ class CheckerBoard:
                     returnString += "-"
         
         return returnString
-
-def getNaiveScore(board: CheckerBoard, player):
-    runningScore = 0
-
-    for i in range(8):
-        for j in range(8):
-            if (board.board[i][j] == player):
-                runningScore += 7
-
-                if (board.crowned[i][j]):
-                    runningScore += 3
-
-            elif (board.board[i][j] != 0):
-                runningScore -= 7
-
-                if (board.crowned[i][j]):
-                    runningScore -= 3
-
-    if (board.gameOver):
-        if (board.player == player):
-            runningScore += 100
-        else:
-            runningScore -= 100
-
-    if (board.isJumpPossible()):
-        if (board.player == player):
-            runningScore += 10
-        else:
-            runningScore -= 10
-
-    return runningScore
-
-def getScoreRec(board: CheckerBoard, player, remainingRounds):
-    if(board.gameOver or remainingRounds == 0):
-        return getNaiveScore(board, player)
-
-    totalScore = 0
-    moveList = board.getMoveList()
-    for move in moveList:
-
-        clone = copy.deepcopy(board)
-        clone.makeMove(move)
-        totalScore += getScoreRec(clone, board.player, remainingRounds - 1)
-
-    return totalScore / len(moveList)
-
-def getScore(board, player):
-    return getScoreRec(board, player, 5)
-
-def getActionList(boardString):
-    board = CheckerBoard(boardString)
-    moveList = board.getMoveList()
-
-    highScore = 0
-    highMove = 0
-    for move in moveList[0:]:
-        
-        clone = copy.deepcopy(board)
-        clone.makeMove(move)
-        
-        score = getScore(clone, board.player)
-
-        #print(clone.toString())
-        print(str(move.startX) + ":" + str(move.startY) + " -> " + str(move.endX) + ":" + str(move.endY) + " Score: " + str(score))
-
-        if(score > highScore or highMove == 0):
-            highScore = score
-            highMove = move
-            
-    print("\nMove chosen: " + str(move.startX) + ":" + str(move.startY) + " -> " + str(move.endX) + ":" + str(move.endY) + " Score: " + str(highScore))
-
-boardString = "2 0-0-1-0- 0-1-0-0- 1-1-1-0- 1-2-1-1- 1-1-1-1- 1-2-1-2- 1-1-1-2- 1-1-0C2-"
-getActionList(boardString)
-
-
-
-
-
-
-
-
-
-
