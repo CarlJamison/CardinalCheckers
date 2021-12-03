@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageDraw
 
 def checkHist(hist, threshold = 90):
     total = 0
@@ -29,27 +29,60 @@ def getValueAt(image, i, j):
 
     return retVal
 
-img = Image.open('boardtest.jpg') 
+def getBoardString(img):
+    printString = "2"
+    for i in range(8):
+        printString += " "
+        for j in range(8):
+            if((i + j) % 2 == 0):
+                val = getValueAt(img, j, i)
+                if(val == 0):
+                    printString += "2-"
+                elif(val == 1):
+                    printString += "0-"
+                elif(val == 3):
+                    printString += "2C"
+                elif(val == 4):
+                    printString += "0C"
+                elif(val == 7):
+                    printString += "1-"
+    return printString
 
-#img = img.transform((512, 512), Image.AFFINE, (1, 1, 0, 0, 1, 0))
-#img = img.transform((128, 128), Image.QUAD, (180, 80, 3350, 90, 3380, 3350, 90, 3350))
-img = img.transform((128, 128), Image.QUAD, (90, 3350, 3380, 3350, 3350, 90, 180, 80))   
+def locateCorner(img):
+    hist = img.split()
+    iTotal = 0
+    jTotal = 0
+    counter = 0
+    for i in range(img.width):
+        for j in range(img.height):
+            if hist[2].getpixel((i, j)) > 100 and hist[0].getpixel((i, j)) < 100:
+                iTotal += i
+                jTotal += j
+                counter += 1
+    return (iTotal / counter, jTotal / counter)
 
-printString = "2"
-for i in range(8):
-    printString += " "
-    for j in range(8):
-        if((i + j) % 2 == 0):
-            val = getValueAt(img, j, i)
-            if(val == 0):
-                printString += "2-"
-            elif(val == 1):
-                printString += "0-"
-            elif(val == 3):
-                printString += "2C"
-            elif(val == 4):
-                printString += "0C"
-            elif(val == 7):
-                printString += "1-"
+def getBoardStringFromImage(fileName):
+    img = Image.open(fileName)
+    img = img.resize((int(img.width / 4), int(img.height / 4)))
+    cropped = img#.crop((1800, 0, img.width, img.height))
+    ulCorner = locateCorner(cropped.crop((0, 0, cropped.width / 2, cropped.height / 2)))
+    urCorner = locateCorner(cropped.crop((cropped.width / 2, 0, cropped.width, cropped.height / 2)))
+    llCorner = locateCorner(cropped.crop((0, cropped.height / 2, cropped.width / 2, cropped.height)))
+    lrCorner = locateCorner(cropped.crop((cropped.width / 2, cropped.height / 2, cropped.width, cropped.height)))
 
-print(printString)
+    draw = ImageDraw.Draw(cropped)
+    draw.ellipse((urCorner[0] - 20, urCorner[1] - 20, urCorner[0] + 20, urCorner[1] + 20), fill = 'red', outline ='red')
+    draw.point((100, 100), 'red')
+    o = 20 
+
+    cropped = cropped.transform((128, 128), Image.QUAD, 
+        (llCorner[0] + o, llCorner[1] - o + cropped.height / 2,
+        lrCorner[0] - o + cropped.width / 2,  lrCorner[1] - o + cropped.height / 2,
+        urCorner[0] - o + cropped.width / 2, urCorner[1] + o, 
+        ulCorner[0] + o, ulCorner[1] + o))  
+
+    cropped.save('test.jpg')
+
+    boardString = getBoardString(cropped)
+    print(boardString)
+    return boardString

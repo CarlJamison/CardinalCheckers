@@ -6,7 +6,13 @@ class Move:
         self.endY = endY 
 
 class CheckerBoard:
+    
     def __init__(self, boardString):
+        self.move = 0
+
+        self._isJumpPossible = False
+        self.jpCheck = -1
+
         self.jumped = False
         self.iJump = 0
         self.jJump = 0
@@ -76,15 +82,25 @@ class CheckerBoard:
         return self.gameOver
 
     def isJumpPossible(self):
-        if (self.jumped):
-            return (self.checkDirection(1, 1, self.iJump, self.jJump) or self.checkDirection(1, -1, self.iJump, self.jJump) or self.checkDirection(-1, 1, self.iJump, self.jJump) or self.checkDirection(-1, -1, self.iJump, self.jJump))
+        if self.move == self.jpCheck:
+            return self._isJumpPossible
+
+        if self.jumped:
+            retVal = self.checkDirection(1, 1, self.iJump, self.jJump) or self.checkDirection(1, -1, self.iJump, self.jJump) or self.checkDirection(-1, 1, self.iJump, self.jJump) or self.checkDirection(-1, -1, self.iJump, self.jJump)
+            self._isJumpPossible = retVal
+            self.jpCheck = self.move
+            return retVal
         
         for i in range(8):
             for j in range(8):
                 if (self.checkDirection(1, 1, i, j) or self.checkDirection(1, -1, i, j) or self.checkDirection(-1, 1, i, j)
 						or self.checkDirection(-1, -1, i, j)):
+                    self._isJumpPossible = True
+                    self.jpCheck = self.move
                     return True
-        
+
+        self._isJumpPossible = False
+        self.jpCheck = self.move
         return False
 
     def isMovePossible(self):
@@ -130,6 +146,7 @@ class CheckerBoard:
             if (valid):
                 self.board[startX][startY] = 0
                 self.board[endX][endY] = self.player
+                self.move += 1
                 self.crowned[endX][endY] = self.crowned[startX][startY]
                 self.crowned[startX][startY] = False
 
