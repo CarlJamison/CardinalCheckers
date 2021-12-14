@@ -1,15 +1,15 @@
-import copy
+import math
 import pickle
 from Checkers import *
-NUMBER_OF_ROUNDS = 5
+NUMBER_OF_ROUNDS = 7
 
 def getNaiveScore(board: CheckerBoard, player):
 
     if board.gameOver: 
         if(board.player == player):
-            return 1001 
+            return 1000
         else:
-            return -1001
+            return -1000
             
     runningScore = 0
 
@@ -27,51 +27,52 @@ def getNaiveScore(board: CheckerBoard, player):
 
     return runningScore
 
-def getScoreRec(board: CheckerBoard, player, remainingRounds):
+def getScoreRec(board: CheckerBoard, player, remainingRounds, ALPHA, BETA):
     if board.gameOver or remainingRounds == 0:
         return getNaiveScore(board, player)
 
-    score = 0
     moveList = board.getMoveList()
-    first = True
     if(board.player == player):
+        score = -math.inf
         for move in moveList:
             clone = pickle.loads(pickle.dumps(board))
             clone.makeMove(move)
-            localScore = getScoreRec(clone, player, remainingRounds - 1)
-            if localScore > 1000: return localScore
-            if localScore > score or first: 
-                score = localScore
-                first = False
+            score = max(getScoreRec(clone, player, remainingRounds - 1, ALPHA, BETA), score)
+            if score >= BETA: return score
+            ALPHA = max(ALPHA, score)
+            if score == 1000: return score
         return score
     else:
+        score = math.inf
         for move in moveList:
             clone = pickle.loads(pickle.dumps(board))
             clone.makeMove(move)
-            localScore = getScoreRec(clone, player, remainingRounds - 1)
-            if localScore < score or first: 
-                score = localScore
-                first = False
+            score = min(getScoreRec(clone, player, remainingRounds - 1, ALPHA, BETA), score)
+            if(score <= ALPHA): return score
+            BETA = min(BETA, score)
+            if score == -1000: return score
         return score
 
-def getScore(board, player):
-    return getScoreRec(board, player, NUMBER_OF_ROUNDS)
+def getScore(board, player, ALPHA, BETA):
+    return getScoreRec(board, player, NUMBER_OF_ROUNDS, ALPHA, BETA)
 
 def GetMove(board: CheckerBoard):
+    ALPHA = -math.inf
+    BETA = math.inf
     moveList = board.getMoveList()
     
     if len(moveList) == 1: return moveList[0]
 
-    highScore = 0
+    highScore = -math.inf
     highMove = 0
     for move in moveList[0:]:
         clone = pickle.loads(pickle.dumps(board))
         clone.makeMove(move)
-        score = getScore(clone, board.player)
-
+        score = getScore(clone, board.player, ALPHA, BETA)
+        ALPHA = max(ALPHA, score)
         print(str(move.startX) + ":" + str(move.startY) + " -> " + str(move.endX) + ":" + str(move.endY) + " Score: " + str(score))
 
-        if(score > highScore or highMove == 0):
+        if(score > highScore):
             highScore = score
             highMove = move
             

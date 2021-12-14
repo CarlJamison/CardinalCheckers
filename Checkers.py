@@ -82,25 +82,25 @@ class CheckerBoard:
         return self.gameOver
 
     def isJumpPossible(self):
-        if self.move == self.jpCheck:
-            return self._isJumpPossible
+        #if self.move == self.jpCheck:
+        #    return self._isJumpPossible
 
         if self.jumped:
             retVal = self.checkDirection(1, 1, self.iJump, self.jJump) or self.checkDirection(1, -1, self.iJump, self.jJump) or self.checkDirection(-1, 1, self.iJump, self.jJump) or self.checkDirection(-1, -1, self.iJump, self.jJump)
-            self._isJumpPossible = retVal
-            self.jpCheck = self.move
+            #self._isJumpPossible = retVal
+            #self.jpCheck = self.move
             return retVal
         
         for i in range(8):
             for j in range(8):
                 if (self.checkDirection(1, 1, i, j) or self.checkDirection(1, -1, i, j) or self.checkDirection(-1, 1, i, j)
 						or self.checkDirection(-1, -1, i, j)):
-                    self._isJumpPossible = True
-                    self.jpCheck = self.move
+                    #self._isJumpPossible = True
+                    #self.jpCheck = self.move
                     return True
 
-        self._isJumpPossible = False
-        self.jpCheck = self.move
+        #self._isJumpPossible = False
+        #self.jpCheck = self.move
         return False
 
     def isMovePossible(self):
